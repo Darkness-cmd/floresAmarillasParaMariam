@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruleta Dedsafio 3 - Para Mariam 🌻</title>
+  
+  <!-- Fuente de Minecraft -->
+  <link href="https://fonts.cdnfonts.com/css/minecraft-4" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #fbbf24;
+      --secondary: #d97706;
+      --bg-glow: rgba(251, 191, 36, 0.2);
+      --border-glow: #fbbf24;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Minecraft', monospace, sans-serif;
+      image-rendering: pixelated;
+    }
+
+    body {
+      background: #0f0f14;
+      background-image: 
+        radial-gradient(circle at 50% 20%, var(--bg-glow) 0%, transparent 70%),
+        linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6));
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      text-shadow: 2px 2px 0px #000;
+    }
+
+    .header-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      color: #ffffff;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      text-shadow: 3px 3px 0px #000;
+    }
+
+    .sub-title {
+      color: var(--primary);
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-shadow: 2px 2px 0px #000;
+    }
+
+    /* Tarjeta Principal Estilo GUI de Minecraft */
+    .roulette-card {
+      background: #c6c6c6;
+      border: 4px solid #000;
+      box-shadow: inset -4px -4px 0px 0px #555555, inset 4px 4px 0px 0px #ffffff;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      width: 100%;
+      max-width: 440px;
+      color: #373737;
+    }
+
+    .color-selector {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: #8b8b8b;
+      padding: 10px 14px;
+      border: 3px solid #000;
+      box-shadow: inset -3px -3px 0px 0px #373737, inset 3px 3px 0px 0px #ffffff;
+    }
+
+    .color-selector label {
+      font-size: 0.95rem;
+      color: #ffffff;
+      text-shadow: 2px 2px 0px #000;
+    }
+
+    .color-selector select {
+      background: #373737;
+      color: var(--primary);
+      border: 2px solid #000;
+      padding: 6px 12px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      outline: none;
+      text-shadow: 1px 1px 0px #000;
+    }
+
+    /* Display del Slot de Inventario (Ruleta) */
+    .roulette-display {
+      width: 250px;
+      height: 250px;
+      background: #8b8b8b;
+      border: 4px solid #000;
+      box-shadow: inset 4px 4px 0px 0px #373737, inset -4px -4px 0px 0px #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Contenido placeholder antes de girar */
+    .placeholder-view {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: #ffffff;
+      text-shadow: 2px 2px 0px #000;
+    }
+
+    .placeholder-icon {
+      font-size: 4.5rem;
+      animation: floatIcon 2s infinite ease-in-out;
+    }
+
+    @keyframes floatIcon {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .roulette-display img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+
+    .status-text {
+      font-size: 0.85rem;
+      color: #1e1e1e;
+      text-shadow: none;
+      height: 20px;
+      text-align: center;
+    }
+
+    /* Botón Estilo Minecraft */
+    .btn-spin {
+      background: #707070;
+      color: #ffffff;
+      border: 3px solid #000;
+      box-shadow: inset -3px -3px 0px 0px #373737, inset 3px 3px 0px 0px #a8a8a8;
+      text-shadow: 2px 2px 0px #000;
+      padding: 14px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+      width: 100%;
+      text-transform: uppercase;
+      transition: background 0.1s;
+    }
+
+    .btn-spin:hover:not(:disabled) {
+      background: #8b8b8b;
+    }
+
+    .btn-spin:active:not(:disabled) {
+      box-shadow: inset 3px 3px 0px 0px #373737, inset -3px -3px 0px 0px #a8a8a8;
+    }
+
+    .btn-spin:disabled {
+      background: #555555;
+      color: #aaa;
+      cursor: not-allowed;
+      box-shadow: inset -3px -3px 0px 0px #222222, inset 3px 3px 0px 0px #777777;
+    }
+
+    /* Capa Base de Animaciones */
+    .anim-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      overflow: hidden;
+    }
+
+    .anim-overlay canvas {
+      position: relative;
+      z-index: 2;
+      width: 90vw;
+      height: 90vh;
+      max-width: 800px;
+      max-height: 800px;
+      object-fit: contain;
+    }
+
+    /* EFECTO REVIIL: ROJO TRANSPARENTE + DISTORSIÓN & SCANLINES */
+    .anim-overlay.overlay-reviil {
+      background: radial-gradient(circle at center, rgba(220, 20, 60, 0.65) 0%, rgba(40, 0, 5, 0.92) 100%);
+      backdrop-filter: blur(3px) contrast(130%);
+      animation: reviilPulse 0.12s infinite alternate;
+    }
+
+    .anim-overlay.overlay-reviil::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.35) 0px,
+        rgba(0, 0, 0, 0.35) 2px,
+        transparent 2px,
+        transparent 4px
+      );
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    @keyframes reviilPulse {
+      0% {
+        box-shadow: inset 0 0 60px rgba(255, 0, 0, 0.8);
+        transform: scale(1) translate(0, 0);
+        filter: hue-rotate(0deg);
+      }
+      50% {
+        box-shadow: inset 0 0 100px rgba(255, 0, 0, 1);
+        transform: scale(1.004) translate(-2px, 1px);
+        filter: hue-rotate(-8deg);
+      }
+      100% {
+        box-shadow: inset 0 0 70px rgba(180, 0, 0, 0.9);
+        transform: scale(0.998) translate(2px, -1px);
+        filter: hue-rotate(5deg);
+      }
+    }
+
+    /* EFECTO NUTRIA: ROSADO SUAVE & GLOW */
+    .anim-overlay.overlay-nutria {
+      background: radial-gradient(circle at center, rgba(244, 114, 182, 0.55) 0%, rgba(25, 5, 18, 0.9) 100%);
+      backdrop-filter: blur(3px);
+      animation: nutriaGlow 2s infinite ease-in-out;
+    }
+
+    @keyframes nutriaGlow {
+      0%, 100% { box-shadow: inset 0 0 50px rgba(244, 114, 182, 0.5); }
+      50% { box-shadow: inset 0 0 90px rgba(244, 114, 182, 0.85); }
+    }
+
+    /* Modal estilo CHAT DE MINECRAFT */
+    .mc-chat-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+
+    .mc-chat-box {
+      background: rgba(0, 0, 0, 0.85);
+      border: 3px solid #373737;
+      box-shadow: 0 0 20px rgba(0,0,0,0.9);
+      padding: 20px;
+      max-width: 520px;
+      width: 100%;
+      text-align: left;
+      line-height: 1.6;
+    }
+
+    .mc-chat-header {
+      font-size: 1.1rem;
+      color: #FFFF55;
+      margin-bottom: 12px;
+      border-bottom: 2px dashed #555;
+      padding-bottom: 6px;
+    }
+
+    .chat-line {
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      word-wrap: break-word;
+    }
+
+    .prefix-server { color: #55FF55; }
+    .prefix-user { color: #FFAA00; }
+    .chat-body { color: #FFFFFF; }
+
+    .btn-mc-close {
+      margin-top: 16px;
+      background: #707070;
+      color: #FFF;
+      border: 2px solid #000;
+      box-shadow: inset -2px -2px 0px 0px #373737, inset 2px 2px 0px 0px #a8a8a8;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      width: 100%;
+      text-shadow: 1px 1px 0px #000;
+    }
+
+    .btn-mc-close:hover {
+      background: #8b8b8b;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-container">
+    <h1>RULETA DEDSAFIO 3</h1>
+    <div id="subTitle" class="sub-title">🌻 Edición Especial Flores Amarillas para Mariam 🌻</div>
+  </div>
+
+  <div class="roulette-card">
+    
+    <div class="color-selector">
+      <label for="colorSelect">Color de Ruleta:</label>
+      <select id="colorSelect" onchange="changeColor()">
+        <option value="amarilla">Amarilla 🌻</option>
+        <option value="azul">Azul 💙</option>
+        <option value="morada">Morada 💜</option>
+        <option value="naranja">Naranja 🧡</option>
+        <option value="roja">Roja ❤️</option>
+        <option value="rosada">Rosada 💗</option>
+        <option value="turqueza">Turqueza 🩵</option>
+        <option value="verde">Verde 💚</option>
+      </select>
+    </div>
+
+    <!-- Frame Slot de Inventario -->
+    <div class="roulette-display">
+      <div id="placeholderView" class="placeholder-view">
+        <span id="placeholderIcon" class="placeholder-icon">🌻</span>
+        <span style="font-size: 0.75rem; color: #ddd;">¡Lista para girar!</span>
+      </div>
+      <img id="rouletteImg" src="" alt="Ruleta" onerror="handleImageError()">
+    </div>
+
+    <div id="statusText" class="status-text">Cargando elementos...</div>
+
+    <button id="spinBtn" class="btn-spin" onclick="spinRoulette()" disabled>GIRAR RULETA 🌻</button>
+  </div>
+
+  <!-- Capa de Animación (Nutria y Reviil) -->
+  <div id="animOverlay" class="anim-overlay">
+    <canvas id="animCanvas"></canvas>
+  </div>
+
+  <!-- Modal estilo Chat de Minecraft -->
+  <div id="mariamModal" class="mc-chat-overlay">
+    <div class="mc-chat-box">
+      <div id="modalHeader" class="mc-chat-header">[DEDSAFIO 3] Mensaje del Servidor</div>
+      
+      <div class="chat-line">
+        <span class="prefix-server">&lt;Servidor&gt;</span> 
+        <span class="chat-body">¡La ruleta se ha detenido con éxito!</span>
+      </div>
+
+      <div class="chat-line">
+        <span class="prefix-user">&lt;DarknessVT&gt;</span> 
+        <span id="mariamMessage" class="chat-body">Cargando mensaje...</span>
+      </div>
+
+      <button class="btn-mc-close" onclick="closeMariamModal()">[ Presiona para continuar ]</button>
+    </div>
+  </div>
+
+<script>
+  const BASE_FOLDER = 'ImgR/';
+  const SOUND_PATH = 'sounds/ruleta.ogg';
+  
+  // Configuración Nutria
+  const NUTRIA_FOLDER = 'nutria/'; 
+  const NUTRIA_SOUND_PATH = 'sounds/muerte.ogg';
+  const NUTRIA_FRAMES = 98;
+
+  // Configuración Reviil
+  const REVIIL_FOLDER = 'reviil/';
+  const REVIIL_SOUND_PATH = 'sounds/reviil.ogg';
+  const REVIIL_FRAMES = 199;
+
+  const rouletteAudio = new Audio(SOUND_PATH);
+  const nutriaAudio = new Audio(NUTRIA_SOUND_PATH);
+  const reviilAudio = new Audio(REVIIL_SOUND_PATH);
+
+  const FRAME_COUNTS = {
+    amarilla: 288,
+    azul: 292,
+    morada: 294,
+    naranja: 287,
+    roja: 295,
+    rosada: 294,
+    turqueza: 287,
+    verde: 290
+  };
+
+  const COLOR_THEMES = {
+    amarilla: {
+      primary: '#fbbf24',
+      bgGlow: 'rgba(251, 191, 36, 0.25)',
+      title: '🌻 Especial Flores Amarillas para Mariam 🌻',
+      modalHeader: '🌻 [Detalle lindo y luz]',
+      emoji: '🌻',
+      messages: [
+        "Para recordarte que espero que hoy tengas un día bonito y que te lleguen muchas cosas buenas. Las flores amarillas siempre me han dado esa sensación de alegría y buena energía,Espero sacarte aunque sea una sonrisita con esto :)"
+      ]
+    },
+    azul: {
+      primary: '#38bdf8',
+      bgGlow: 'rgba(56, 189, 248, 0.25)',
+      title: '🌊 Ruleta Azul - Calma y cero estrés 💙',
+      modalHeader: '💙 [Calma y cero estrés]',
+      emoji: '💙',
+      messages: [
+        "Para cuando estés estresada y necesites bajar un poquito las revoluciones. No te tomes todo tan a pecho ni sientas que tienes que resolver todo de una, también está bien parar y descansar. Y pues nada, gracias también por ser de esas personas con las que uno puede estar tranquilo sin tener que pensar demasiado qué decir."
+      ]
+    },
+    morada: {
+      primary: '#c084fc',
+      bgGlow: 'rgba(192, 132, 252, 0.25)',
+      title: '✨ Ruleta Morada - Cómplice y parche 💜',
+      modalHeader: '💜 [Cómplice y parche]',
+      emoji: '💜',
+      messages: [
+        "Esta es básicamente un vale por una charla random o cualquier plan que termine en nosotros diciendo puras bobadas JAJA. Porque sinceramente siempre termina siendo bacano hablar contigo, incluso cuando empezamos hablando de una cosa y terminamos quién sabe dónde."
+      ]
+    },
+    naranja: {
+      primary: '#fb923c',
+      bgGlow: 'rgba(251, 146, 60, 0.25)',
+      title: '🍊 Ruleta Naranja - Risas y comida 🧡',
+      modalHeader: '🧡 [Risas y comida]',
+      emoji: '🧡',
+      messages: [
+        "Esta tiene una condición importante: algún día toca salir por un helado, un postre o cualquier cosa que podamos comer mientras hablamos de cualquier estupidez JAJA. Porque entre tanta cosa seria también hacen falta esos momentos donde uno simplemente se ríe hasta por lo más pendejo."
+      ]
+    },
+    roja: {
+      primary: '#f87171',
+      bgGlow: 'rgba(248, 113, 113, 0.25)',
+      title: '🌹 Ruleta Roja - Modo diavlo ❤️',
+      modalHeader: '❤️ [Modo diavlo]',
+      emoji: '❤️',
+      messages: [
+        "Esta es para dar a relucir mi odio hacia hitogami y el hecho de que por culpa suya todos los personajes que quiero esten muertos :,v"
+      ]
+    },
+    rosada: {
+      primary: '#f472b6',
+      bgGlow: 'rgba(244, 114, 182, 0.25)',
+      title: '🌸 Ruleta Rosada - Aprecio sincero / Momento nutria 💗',
+      modalHeader: '💗 [Aprecio sincero / Momento nutria]',
+      emoji: '💗',
+      messages: [
+        "Esta es simplemente porque te quiero mucho y quería recordártelo sin hacer todo un discurso raro JAJA. Gracias por todos esos pequeños detalles que has tenido conmigo y por estar ahí en momentos donde de verdad los necesitaba. Te has ganado un espacio muy bonito entre mis personas favoritas. 🦦"
+      ]
+    },
+    turqueza: {
+      primary: '#2dd4bf',
+      bgGlow: 'rgba(45, 212, 191, 0.25)',
+      title: '💎 Ruleta Turquesa - Anécdotas y chisme 🩵',
+      modalHeader: '🩵 [Anécdotas y chisme]',
+      emoji: '🩵',
+      messages: [
+        "Esta representa todas esas conversaciones random, los chismes, las situaciones que uno después recuerda y dice “¿qué carajos fue eso?” JAJA. Pero creo que justamente esas cosas hacen que los momentos sean chéveres. Tu presencia siempre termina dejando alguna anécdota rara que recordar."
+      ]
+    },
+    verde: {
+      primary: '#4ade80',
+      bgGlow: 'rgba(74, 222, 128, 0.25)',
+      title: '🍀 Ruleta Verde - Buena suerte y éxito 💚',
+      modalHeader: '💚 [Buena suerte y éxito]',
+      emoji: '💚',
+      messages: [
+        "Para desearte toda la suerte del mundo con lo que tengas pendiente. Exámenes, trabajos, proyectos, lo que sea. Ojalá todo te salga incluso mejor de lo que esperas y puedas terminar todo diciendo “por finnn”. Confía en ti y dale con toda, que tienes con qué lograrlo. 🍀"
+      ]
+    }
+  };
+
+  let currentCategory = 'amarilla';
+  let preloadedImages = [];
+  let preloadedNutriaImages = [];
+  let preloadedReviilImages = [];
+  let isSpinning = false;
+
+  let animFrameId = null;
+  let nutriaAnimFrameId = null;
+  let reviilAnimFrameId = null;
+
+  function updateUITheme(color) {
+    const theme = COLOR_THEMES[color] || COLOR_THEMES.amarilla;
+
+    document.documentElement.style.setProperty('--primary', theme.primary);
+    document.documentElement.style.setProperty('--bg-glow', theme.bgGlow);
+
+    document.getElementById('subTitle').innerText = theme.title;
+    document.getElementById('spinBtn').innerText = `GIRAR RULETA ${theme.emoji}`;
+    document.getElementById('placeholderIcon').innerText = theme.emoji;
+  }
+
+  async function preloadNutriaImages() {
+    preloadedNutriaImages = [];
+    const decodePromises = [];
+
+    for (let i = 1; i <= NUTRIA_FRAMES; i++) {
+      const img = new Image();
+      img.src = `${NUTRIA_FOLDER}momentonutria-${i}.png`;
+      preloadedNutriaImages.push(img);
+
+      if (img.decode) {
+        decodePromises.push(img.decode().catch(() => {}));
+      }
+    }
+    await Promise.all(decodePromises);
+  }
+
+  async function preloadReviilImages() {
+    preloadedReviilImages = [];
+    const decodePromises = [];
+
+    for (let i = 1; i <= REVIIL_FRAMES; i++) {
+      const img = new Image();
+      img.src = `${REVIIL_FOLDER}momentoreviil-${i}.png`;
+      preloadedReviilImages.push(img);
+
+      if (img.decode) {
+        decodePromises.push(img.decode().catch(() => {}));
+      }
+    }
+    await Promise.all(decodePromises);
+  }
+
+  function preloadCategoryImages(color) {
+    preloadedImages = [];
+    const totalFrames = FRAME_COUNTS[color];
+
+    for (let i = 1; i <= totalFrames; i++) {
+      const img = new Image();
+      img.src = `${BASE_FOLDER}${color}/${color}-${i}.png`;
+      preloadedImages.push(img);
+    }
+  }
+
+  /* Animación Nutria (Rosada) */
+  function playNutriaAnimation() {
+    const overlay = document.getElementById('animOverlay');
+    const canvas = document.getElementById('animCanvas');
+    const ctx = canvas.getContext('2d');
+
+    overlay.className = 'anim-overlay overlay-nutria';
+    overlay.style.display = 'flex';
+    nutriaAudio.currentTime = 0;
+    nutriaAudio.volume = 0.8;
+
+    const firstImg = preloadedNutriaImages[0];
+    if (firstImg && firstImg.naturalWidth) {
+      canvas.width = firstImg.naturalWidth;
+      canvas.height = firstImg.naturalHeight;
+    } else {
+      canvas.width = 512;
+      canvas.height = 512;
+    }
+
+    ctx.imageSmoothingEnabled = false;
+
+    nutriaAudio.play().then(() => {
+      const startTime = performance.now();
+      const audioDuration = (nutriaAudio.duration && !isNaN(nutriaAudio.duration)) ? nutriaAudio.duration : 3.2;
+      let lastFrameIndex = -1;
+
+      function renderFrame(now) {
+        const elapsed = (now - startTime) / 1000;
+        const progress = Math.min(elapsed / audioDuration, 1);
+        let frameIndex = Math.floor(progress * NUTRIA_FRAMES);
+
+        if (frameIndex >= NUTRIA_FRAMES) frameIndex = NUTRIA_FRAMES - 1;
+
+        if (frameIndex !== lastFrameIndex) {
+          lastFrameIndex = frameIndex;
+          const img = preloadedNutriaImages[frameIndex];
+
+          if (img) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          }
+        }
+
+        if (progress < 1 && !nutriaAudio.paused && !nutriaAudio.ended) {
+          nutriaAnimFrameId = requestAnimationFrame(renderFrame);
+        }
+      }
+
+      nutriaAnimFrameId = requestAnimationFrame(renderFrame);
+    }).catch(() => {
+      overlay.style.display = 'none';
+      overlay.className = 'anim-overlay';
+    });
+  }
+
+  nutriaAudio.onended = () => {
+    cancelAnimationFrame(nutriaAnimFrameId);
+    const overlay = document.getElementById('animOverlay');
+    overlay.style.display = 'none';
+    overlay.className = 'anim-overlay';
+    showMariamModal();
+  };
+
+  /* Animación Reviil (Roja) */
+  function playReviilAnimation() {
+    const overlay = document.getElementById('animOverlay');
+    const canvas = document.getElementById('animCanvas');
+    const ctx = canvas.getContext('2d');
+
+    overlay.className = 'anim-overlay overlay-reviil';
+    overlay.style.display = 'flex';
+    reviilAudio.currentTime = 0;
+    reviilAudio.volume = 0.8;
+
+    const firstImg = preloadedReviilImages[0];
+    if (firstImg && firstImg.naturalWidth) {
+      canvas.width = firstImg.naturalWidth;
+      canvas.height = firstImg.naturalHeight;
+    } else {
+      canvas.width = 512;
+      canvas.height = 512;
+    }
+
+    ctx.imageSmoothingEnabled = false;
+
+    reviilAudio.play().then(() => {
+      const startTime = performance.now();
+      const audioDuration = (reviilAudio.duration && !isNaN(reviilAudio.duration)) ? reviilAudio.duration : 3.5;
+      let lastFrameIndex = -1;
+
+      function renderFrame(now) {
+        const elapsed = (now - startTime) / 1000;
+        const progress = Math.min(elapsed / audioDuration, 1);
+        let frameIndex = Math.floor(progress * REVIIL_FRAMES);
+
+        if (frameIndex >= REVIIL_FRAMES) frameIndex = REVIIL_FRAMES - 1;
+
+        if (frameIndex !== lastFrameIndex) {
+          lastFrameIndex = frameIndex;
+          const img = preloadedReviilImages[frameIndex];
+
+          if (img) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          }
+        }
+
+        if (progress < 1 && !reviilAudio.paused && !reviilAudio.ended) {
+          reviilAnimFrameId = requestAnimationFrame(renderFrame);
+        }
+      }
+
+      reviilAnimFrameId = requestAnimationFrame(renderFrame);
+    }).catch(() => {
+      overlay.style.display = 'none';
+      overlay.className = 'anim-overlay';
+    });
+  }
+
+  reviilAudio.onended = () => {
+    cancelAnimationFrame(reviilAnimFrameId);
+    const overlay = document.getElementById('animOverlay');
+    overlay.style.display = 'none';
+    overlay.className = 'anim-overlay';
+    showMariamModal();
+  };
+
+  function showMariamModal() {
+    const theme = COLOR_THEMES[currentCategory] || COLOR_THEMES.amarilla;
+    const randomMsg = theme.messages[Math.floor(Math.random() * theme.messages.length)];
+    
+    document.getElementById('modalHeader').innerText = theme.modalHeader;
+    document.getElementById('mariamMessage').innerText = randomMsg;
+    document.getElementById('mariamModal').style.display = 'flex';
+  }
+
+  function closeMariamModal() {
+    document.getElementById('mariamModal').style.display = 'none';
+  }
+
+  function changeColor() {
+    if (isSpinning) return;
+    currentCategory = document.getElementById('colorSelect').value;
+    
+    updateUITheme(currentCategory);
+    
+    document.getElementById('placeholderView').style.display = 'flex';
+    document.getElementById('rouletteImg').style.display = 'none';
+
+    document.getElementById('statusText').innerText = `Ruleta ${currentCategory} lista`;
+    preloadCategoryImages(currentCategory);
+  }
+
+  function handleImageError() {
+    const status = document.getElementById('statusText');
+    status.innerText = `Error cargando imágenes en ${BASE_FOLDER}${currentCategory}/`;
+    status.style.color = '#e53e3e';
+  }
+
+  function spinRoulette() {
+    if (isSpinning) return;
+
+    isSpinning = true;
+    const spinBtn = document.getElementById('spinBtn');
+    const statusText = document.getElementById('statusText');
+    const colorSelect = document.getElementById('colorSelect');
+    const totalFrames = FRAME_COUNTS[currentCategory];
+
+    document.getElementById('placeholderView').style.display = 'none';
+    document.getElementById('rouletteImg').style.display = 'block';
+
+    spinBtn.disabled = true;
+    colorSelect.disabled = true;
+    statusText.innerText = 'Girando ruleta...';
+
+    rouletteAudio.currentTime = 0;
+    rouletteAudio.volume = 0.7;
+
+    rouletteAudio.play().then(() => {
+      const startTime = performance.now();
+      const audioDuration = (rouletteAudio.duration && !isNaN(rouletteAudio.duration)) ? rouletteAudio.duration : 3.5;
+      let lastFrameIndex = -1;
+
+      function updateFrame(currentTime) {
+        const elapsed = (currentTime - startTime) / 1000;
+        const progress = Math.min(elapsed / audioDuration, 1);
+        let frameIndex = Math.floor(progress * totalFrames);
+        
+        if (frameIndex >= totalFrames) frameIndex = totalFrames - 1;
+
+        if (frameIndex !== lastFrameIndex) {
+          lastFrameIndex = frameIndex;
+          if (preloadedImages[frameIndex]) {
+            document.getElementById('rouletteImg').src = preloadedImages[frameIndex].src;
+          }
+        }
+
+        if (progress < 1 && !rouletteAudio.paused && !rouletteAudio.ended) {
+          animFrameId = requestAnimationFrame(updateFrame);
+        }
+      }
+
+      animFrameId = requestAnimationFrame(updateFrame);
+    }).catch(() => {
+      statusText.innerText = 'Haz clic en la pantalla para activar el audio.';
+      spinBtn.disabled = false;
+      colorSelect.disabled = false;
+      isSpinning = false;
+    });
+  }
+
+  rouletteAudio.onended = () => {
+    if (isSpinning) {
+      cancelAnimationFrame(animFrameId);
+      const totalFrames = FRAME_COUNTS[currentCategory];
+      
+      document.getElementById('rouletteImg').src = preloadedImages[totalFrames - 1].src;
+
+      isSpinning = false;
+      document.getElementById('spinBtn').disabled = false;
+      document.getElementById('colorSelect').disabled = false;
+      document.getElementById('statusText').innerText = `¡Resultado obtenido! (${currentCategory.toUpperCase()})`;
+
+      if (currentCategory === 'rosada') {
+        playNutriaAnimation();
+      } else if (currentCategory === 'roja') {
+        playReviilAnimation();
+      } else {
+        showMariamModal();
+      }
+    }
+  };
+
+  async function init() {
+    updateUITheme(currentCategory);
+    preloadCategoryImages(currentCategory);
+    await Promise.all([
+      preloadNutriaImages(),
+      preloadReviilImages()
+    ]);
+    
+    document.getElementById('spinBtn').disabled = false;
+    document.getElementById('statusText').innerText = '¡Selecciona un color y gira!';
+  }
+
+  init();
+</script>
+
+</body>
+</html>
